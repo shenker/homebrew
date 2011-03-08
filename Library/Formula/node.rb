@@ -1,10 +1,10 @@
 require 'formula'
 
 class Node <Formula
-  url 'http://nodejs.org/dist/node-v0.2.0.tar.gz'
-  head 'git://github.com/ry/node.git'
+  url 'http://nodejs.org/dist/node-v0.4.2.tar.gz'
+  head 'git://github.com/joyent/node.git'
   homepage 'http://nodejs.org/'
-  md5 '99a6dacc44b3f9c6ec376ccb446dd0b8'
+  md5 '9e9e791e125f6a601ebc663dc99c72a8'
 
   # Stripping breaks dynamic loading
   skip_clean :all
@@ -26,5 +26,9 @@ class Node <Formula
 
     system "./configure", *args
     system "make install"
+  end
+
+  def caveats
+    "Please add #{HOMEBREW_PREFIX}/lib/node to your NODE_PATH environment variable to have node libraries picked up."
   end
 end
