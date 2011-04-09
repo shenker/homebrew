@@ -1,15 +1,16 @@
 require 'formula'
 
-class Pixman <Formula
-  url 'http://www.cairographics.org/releases/pixman-0.21.2.tar.gz'
+class Pixman < Formula
+  url 'http://cgit.freedesktop.org/pixman/snapshot/pixman-0.21.6.tar.bz2'
   homepage 'http://www.cairographics.org/'
-  md5 '9e09fd6e58cbf9717140891e0b7d4a7a'
+  sha1 '7725825e3bdf3edbd00de8f4162c30d42387a8db'
 
   depends_on 'pkg-config' => :build
-  depends_on 'libpng'
 
   def install
-    system "./configure", "--prefix=#{prefix}", "--disable-dependency-tracking"
+    system "./configure", "--disable-dependency-tracking",
+                          "--prefix=#{prefix}",
+                          "--enable-gtk=no" # Don't need to build tests
     system "make install"
   end
 end
