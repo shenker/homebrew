@@ -12,15 +12,20 @@ class Logstalgia < Formula
   depends_on 'ftgl'
   depends_on 'jpeg'
   depends_on 'pcre'
+  depends_on :x11
+
+  if ARGV.build_head? and MacOS.xcode_version >= "4.3"
+    depends_on "automake" => :build
+    depends_on "libtool" => :build
+  end
+
 
   def install
-    ENV.x11 # Put freetype-config in path
-
     # For non-/usr/local installs
     ENV.append "CXXFLAGS", "-I#{HOMEBREW_PREFIX}/include"
 
     # Handle building head.
-    system "autoreconf -f -i" unless File.exist? "configure"
+    system "autoreconf -f -i" if ARGV.build_head?
 
     system "./configure", "--disable-dependency-tracking",
                           "--prefix=#{prefix}"

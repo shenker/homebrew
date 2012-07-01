@@ -1,40 +1,45 @@
 require 'formula'
 
+class NoExpatFramework < Requirement
+  def message; <<-EOS.undent
+    Detected /Library/Frameworks/expat.framework
+
+    This will be picked up by CMake's build system and likely cause the
+    build to fail, trying to link to a 32-bit version of expat.
+
+    You may need to move this file out of the way to compile CMake.
+    EOS
+  end
+  def satisfied?
+    not File.exist? "/Library/Frameworks/expat.framework"
+  end
+end
+
+
 class Cmake < Formula
-  url 'http://www.cmake.org/files/v2.8/cmake-2.8.5.tar.gz'
-  md5 '3c5d32cec0f4c2dc45f4c2e84f4a20c5'
+  url 'http://www.cmake.org/files/v2.8/cmake-2.8.8.tar.gz'
+  md5 'ba74b22c788a0c8547976b880cd02b17'
   homepage 'http://www.cmake.org/'
 
+  bottle do
+    version 2
+    sha1 '64de3916cea46cf98ff0853db401109394cfbd5d' => :lion
+    sha1 'da25300b55944c84e6a0c2e4efc57bb160a02806' => :snowleopard
+  end
+
+  depends_on NoExpatFramework.new
+
   def patches
-    # CMake 2.8.5 fails to find some Qt libraries that CMake 2.8.4 could find.
-    # The following patch corrects this behavior. See discussion on the CMake
-    # mailing list:
-    #
-    #   http://cmake.3232098.n2.nabble.com/FindQt4-errors-out-when-locating-QtUITools-under-CMake-2-8-5-td6619091.html
-    #
-    # Patch can be removed after next CMake release.
-    {:p1 => "http://cmake.org/gitweb?p=cmake.git;a=patch;h=702538eaa3315f3fcad9f1daea01e6a83928967b"}
+    [
+      # Correct FindPkgConfig found variable. Remove for CMake 2.8.9.
+      "https://github.com/Kitware/CMake/commit/3ea850.patch",
+      # Protect the default value of CMAKE_FIND_FRAMEWORK so that it can be
+      # overridden from the command line. Remove for CMake 2.8.9.
+      "https://github.com/Kitware/CMake/commit/8b2fb3.patch"
+    ]
   end
 
   def install
-    # A framework-installed expat will be detected and mess things up.
-    if File.exist? "/Library/Frameworks/expat.framework"
-      opoo "/Library/Frameworks/expat.framework detected"
-      puts <<-EOS.undent
-        This will be picked up by Cmake's build system and likey cause the
-        build to fail, trying to link to a 32-bit version of expat.
-        You may need to move this file out of the way for this brew to work.
-      EOS
-    end
-
-    if ENV['GREP_OPTIONS'] == "--color=always"
-      opoo "GREP_OPTIONS is set to '--color=always'"
-      puts <<-EOS.undent
-        Having `GREP_OPTIONS` set this way causes Cmake builds to fail.
-        You will need to `unset GREP_OPTIONS` before brewing.
-      EOS
-    end
-
     system "./bootstrap", "--prefix=#{prefix}",
                           "--system-libs",
                           "--no-system-libarchive",
@@ -43,5 +48,9 @@ class Cmake < Formula
                           "--mandir=/share/man"
     system "make"
     system "make install"
+  end
+
+  def test
+    system "#{bin}/cmake", "-E", "echo", "testing"
   end
 end

@@ -1,9 +1,9 @@
 require 'formula'
 
 class Tomcat < Formula
-  url 'http://www.apache.org/dyn/closer.cgi?path=tomcat/tomcat-7/v7.0.20/bin/apache-tomcat-7.0.20.tar.gz'
   homepage 'http://tomcat.apache.org/'
-  md5 'e6a8b71d334d28a471682ee02fd08b91'
+  url 'http://www.apache.org/dyn/closer.cgi?path=tomcat/tomcat-7/v7.0.28/bin/apache-tomcat-7.0.28.tar.gz'
+  sha1 '1bf21f2121eb0dc234cd092ec1d9c92416c0e4b1'
 
   skip_clean :all
 
@@ -14,9 +14,6 @@ class Tomcat < Formula
     # Install files
     prefix.install %w{ NOTICE LICENSE RELEASE-NOTES RUNNING.txt }
     libexec.install Dir['*']
-
-    # Symlink binaries
-    bin.mkpath
-    ln_s "#{libexec}/bin/catalina.sh", bin+"catalina"
+    bin.install_symlink "#{libexec}/bin/catalina.sh" => "catalina"
   end
 end

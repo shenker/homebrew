@@ -3,7 +3,14 @@ class Cleaner
     @f = Formula.factory f
     [f.bin, f.sbin, f.lib].select{ |d| d.exist? }.each{ |d| clean_dir d }
 
-    unless ENV['HOMEBREW_KEEP_INFO'].nil?
+    if ENV['HOMEBREW_KEEP_INFO']
+      # Get rid of the directory file, so it no longer bother us at link stage.
+      info_dir_file = f.info + 'dir'
+      if info_dir_file.file? and not f.skip_clean? info_dir_file
+        puts "rm #{info_dir_file}" if ARGV.verbose?
+        info_dir_file.unlink
+      end
+    else
       f.info.rmtree if f.info.directory? and not f.skip_clean? f.info
     end
 
@@ -30,7 +37,7 @@ class Cleaner
     puts "strip #{path}" if ARGV.verbose?
     path.chmod 0644 # so we can strip
     unless path.stat.nlink > 1
-      system "strip", *(args+path)
+      system "#{MacOS.locate('strip')}", *(args+path)
     else
       path = path.to_s.gsub ' ', '\\ '
 
@@ -38,7 +45,7 @@ class Cleaner
       # is this expected behaviour? patch does it too… still, this fixes it
       tmp = `/usr/bin/mktemp -t homebrew_strip`.chomp
       begin
-        `/usr/bin/strip #{args} -o #{tmp} #{path}`
+        `#{MacOS.locate('strip')} #{args} -o #{tmp} #{path}`
         `/bin/cat #{tmp} > #{path}`
       ensure
         FileUtils.rm tmp
@@ -48,15 +55,14 @@ class Cleaner
 
   def clean_file path
     perms = 0444
-    case `file -h '#{path}'`
-    when /Mach-O dynamically linked shared library/
+    if path.dylib?
       # Stripping libraries is causing no end of trouble. Lets just give up,
       # and try to do it manually in instances where it makes sense.
       #strip path, '-SxX'
-    when /Mach-O [^ ]* ?executable/
+    elsif path.mach_o_executable?
       strip path
       perms = 0555
-    when /script text executable/
+    elsif path.text_executable?
       perms = 0555
     end
     path.chmod perms
@@ -70,6 +76,8 @@ class Cleaner
         next
       elsif path.extname == '.la'
         # *.la files are stupid
+        path.unlink unless @f.skip_clean? path
+      elsif path == @f.lib+'charset.alias'
         path.unlink unless @f.skip_clean? path
       elsif not path.symlink?
         clean_file path

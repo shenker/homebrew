@@ -2,13 +2,12 @@ require 'formula'
 
 class Nginx < Formula
   homepage 'http://nginx.org/'
-  url 'http://nginx.org/download/nginx-1.0.5.tar.gz'
-  head 'http://nginx.org/download/nginx-1.1.0.tar.gz'
+  url 'http://nginx.org/download/nginx-1.2.1.tar.gz'
+  sha1 '4fb69411f6c3ebb5818005955a085e891e77b2d8'
 
-  unless ARGV.build_head?
-    md5 '373c7761a7c682b92b164c8ee3d6d243'
-  else
-    md5 '3381f34eafc755f935a2d94148500505'
+  devel do
+    url 'http://nginx.org/download/nginx-1.3.2.tar.gz'
+    sha1 'a3507cb2f13332489804f79885541c717f8f4bf0'
   end
 
   depends_on 'pcre'
@@ -16,7 +15,6 @@ class Nginx < Formula
   skip_clean 'logs'
 
   # Changes default port to 8080
-  # Tell configure to look for pcre in HOMEBREW_PREFIX
   def patches
     DATA
   end
@@ -45,6 +43,8 @@ class Nginx < Formula
     args = ["--prefix=#{prefix}",
             "--with-http_ssl_module",
             "--with-pcre",
+            "--with-cc-opt='-I#{HOMEBREW_PREFIX}/include'",
+            "--with-ld-opt='-L#{HOMEBREW_PREFIX}/lib'",
             "--conf-path=#{etc}/nginx/nginx.conf",
             "--pid-path=#{var}/run/nginx.pid",
             "--lock-path=#{var}/nginx/nginx.lock"]
@@ -53,9 +53,12 @@ class Nginx < Formula
     args << "--with-http_dav_module" if ARGV.include? '--with-webdav'
 
     system "./configure", *args
+    system "make"
     system "make install"
+    man8.install "objs/nginx.8"
 
-    (prefix+'org.nginx.nginx.plist').write startup_plist
+    plist_path.write startup_plist
+    plist_path.chmod 0644
   end
 
   def caveats; <<-EOS.undent
@@ -68,8 +71,8 @@ class Nginx < Formula
 
     You can start nginx automatically on login running as your user with:
       mkdir -p ~/Library/LaunchAgents
-      cp #{prefix}/org.nginx.nginx.plist ~/Library/LaunchAgents/
-      launchctl load -w ~/Library/LaunchAgents/org.nginx.nginx.plist
+      cp #{plist_path} ~/Library/LaunchAgents/
+      launchctl load -w ~/Library/LaunchAgents/#{plist_path.basename}
 
     Though note that if running as your user, the launch agent will fail if you
     try to use a port below 1024 (such as http's default of 80.)
@@ -83,18 +86,16 @@ class Nginx < Formula
 <plist version="1.0">
   <dict>
     <key>Label</key>
-    <string>org.nginx.nginx</string>
+    <string>#{plist_name}</string>
     <key>RunAtLoad</key>
     <true/>
     <key>KeepAlive</key>
-    <true/>
+    <false/>
     <key>UserName</key>
     <string>#{`whoami`.chomp}</string>
     <key>ProgramArguments</key>
     <array>
-        <string>#{sbin}/nginx</string>
-        <string>-g</string>
-        <string>daemon off;</string>
+        <string>#{HOMEBREW_PREFIX}/sbin/nginx</string>
     </array>
     <key>WorkingDirectory</key>
     <string>#{HOMEBREW_PREFIX}</string>
@@ -105,31 +106,6 @@ class Nginx < Formula
 end
 
 __END__
---- a/auto/lib/pcre/conf
-+++ b/auto/lib/pcre/conf
-@@ -155,6 +155,22 @@ else
-             . auto/feature
-         fi
-
-+        if [ $ngx_found = no ]; then
-+
-+            # Homebrew
-+            HOMEBREW_PREFIX=${NGX_PREFIX%Cellar*}
-+            ngx_feature="PCRE library in ${HOMEBREW_PREFIX}"
-+            ngx_feature_path="${HOMEBREW_PREFIX}/include"
-+
-+            if [ $NGX_RPATH = YES ]; then
-+                ngx_feature_libs="-R${HOMEBREW_PREFIX}/lib -L${HOMEBREW_PREFIX}/lib -lpcre"
-+            else
-+                ngx_feature_libs="-L${HOMEBREW_PREFIX}/lib -lpcre"
-+            fi
-+
-+            . auto/feature
-+        fi
-+
-         if [ $ngx_found = yes ]; then
-             CORE_DEPS="$CORE_DEPS $REGEX_DEPS"
-             CORE_SRCS="$CORE_SRCS $REGEX_SRCS"
 --- a/conf/nginx.conf
 +++ b/conf/nginx.conf
 @@ -33,7 +33,7 @@

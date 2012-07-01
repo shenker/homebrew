@@ -2,8 +2,8 @@ require 'formula'
 
 class Gstreamer < Formula
   homepage 'http://gstreamer.freedesktop.org/'
-  url 'http://gstreamer.freedesktop.org/src/gstreamer/gstreamer-0.10.34.tar.bz2'
-  sha256 '85348f70dc4b70ad1beb05c9a59a64175c5058f4ee5273f89230a3c1d11b26a3'
+  url 'http://gstreamer.freedesktop.org/src/gstreamer/gstreamer-0.10.36.tar.bz2'
+  sha256 'e556a529e0a8cf1cd0afd0cab2af5488c9524e7c3f409de29b5d82bb41ae7a30'
 
   depends_on 'pkg-config' => :build
   depends_on 'gettext'
@@ -18,8 +18,11 @@ class Gstreamer < Formula
       "PLUGINDIR=\"#{HOMEBREW_PREFIX}/lib/gstreamer-0.10\""
 
     ENV.append "CFLAGS", "-funroll-loops -fstrict-aliasing -fno-common"
-    system "./configure", "--prefix=#{prefix}", "--disable-debug",
-      "--disable-dependency-tracking"
+
+    system "./configure", "--prefix=#{prefix}",
+                          "--disable-debug",
+                          "--disable-dependency-tracking",
+                          "--enable-introspection=no"
     system "make"
     system "make install"
   end

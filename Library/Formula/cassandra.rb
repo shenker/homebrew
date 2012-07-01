@@ -1,9 +1,9 @@
 require 'formula'
 
 class Cassandra < Formula
-  url 'http://www.apache.org/dyn/closer.cgi?path=cassandra/0.8.4/apache-cassandra-0.8.4-bin.tar.gz'
   homepage 'http://cassandra.apache.org'
-  md5 'e3cf1896d65ede37aebabe5af4569033'
+  url 'http://www.apache.org/dyn/closer.cgi?path=/cassandra/1.1.1/apache-cassandra-1.1.1-bin.tar.gz'
+  sha1 '32c6719c53dae7c520c91028e98b2c66d18fc264'
 
   def install
     (var+"lib/cassandra").mkpath
@@ -28,7 +28,52 @@ class Cassandra < Formula
     rm Dir["bin/*.bat"]
 
     (etc+"cassandra").install Dir["conf/*"]
-    prefix.install Dir["*.txt"] + Dir["{bin,interface,javadoc,lib/licenses}"]
+    prefix.install Dir["*.txt"] + Dir["{bin,interface,javadoc,pylib,lib/licenses}"]
     prefix.install Dir["lib/*.jar"]
+
+    plist_path.write startup_plist
+    plist_path.chmod 0644
+  end
+
+  def caveats; <<-EOS.undent
+    If this is your first install, automatically load on login with:
+      mkdir -p ~/Library/LaunchAgents
+      cp #{plist_path} ~/Library/LaunchAgents/
+      launchctl load -w ~/Library/LaunchAgents/#{plist_path.basename}
+
+    If you plan to use the CQL shell (cqlsh), you will need the Python CQL library
+    installed. Since Homebrew prefers using pip for Python packages, you can
+    install that using:
+
+      pip install cql
+
+    EOS
+  end
+
+  def startup_plist; <<-EOPLIST
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+  <dict>
+    <key>KeepAlive</key>
+    <true/>
+
+    <key>Label</key>
+    <string>#{plist_name}</string>
+
+    <key>ProgramArguments</key>
+    <array>
+        <string>#{HOMEBREW_PREFIX}/bin/cassandra</string>
+        <string>-f</string>
+    </array>
+
+    <key>RunAtLoad</key>
+    <true/>
+
+    <key>WorkingDirectory</key>
+    <string>#{var}/lib/cassandra</string>
+  </dict>
+</plist>
+    EOPLIST
   end
 end

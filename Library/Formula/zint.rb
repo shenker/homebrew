@@ -1,22 +1,29 @@
 require 'formula'
 
 class Zint < Formula
-  url 'http://downloads.sourceforge.net/project/zint/zint/2.4.1/zint-2.4.1.tar.gz'
-  homepage 'http://www.zint.org.uk'
-  md5 '7ec4441907827fa613b11847a467c61d'
+  homepage 'http://zint.github.com/'
+  url 'https://github.com/downloads/zint/zint/zint-2.4.3.tar.gz'
+  md5 '2b47caff88cb746f212d6a0497185358'
+
   head 'git://zint.git.sourceforge.net/gitroot/zint/zint'
 
-  depends_on 'cmake'
+  depends_on 'cmake' => :build
+  depends_on :x11
 
   def install
-    cd('build')
-    system "cmake ..  #{std_cmake_parameters} -DCMAKE_PREFIX_PATH=#{prefix} -DCMAKE_C_FLAGS=-I/usr/X11/include"
-    system "make install"
+    mkdir 'zint-build' do
+      system "cmake", "..",
+                      "-DCMAKE_PREFIX_PATH=#{prefix}",
+                      "-DCMAKE_C_FLAGS=-I#{MacOS.x11_prefix}/include",
+                      *std_cmake_args
+      system "make install"
+    end
   end
 
   def test
-    system "zint -o test-zing.png -d 'This Text'"
-    system "open test-zing.png"
-    puts "You may want to `rm test-zing.png`"
+    mktemp do
+      system "#{bin}/zint", "-o", "test-zing.png", "-d", "This Text"
+      system "/usr/bin/qlmanage", "-p", "test-zing.png"
+    end
   end
 end
