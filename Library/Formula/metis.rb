@@ -8,7 +8,7 @@ class Metis < Formula
   depends_on 'cmake' => :build
 
   def install
-    system "make", "config", "prefix=#{prefix}"
+    system "make", "config", "prefix=#{prefix}", "shared=1"
     system "make install"
   end
 end

@@ -34,7 +34,8 @@ class Macvim < Formula
       --enable-multibyte
       --with-macarchs=#{arch}
       --enable-perlinterp
-      --enable-pythoninterp
+      --enable-pythoninterp=yes
+      --with-python-config-dir=/usr/local/Cellar/python/2.7.3/Frameworks/Python.framework/Versions/2.7/lib/python2.7/config
       --enable-rubyinterp
       --enable-tclinterp
       --with-ruby-command=/System/Library/Frameworks/Ruby.framework/Versions/1.8/usr/bin/ruby

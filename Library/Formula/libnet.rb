@@ -17,7 +17,7 @@ class Libnet < Formula
   end
 
   def install
-    system "autoreconf --force --install"
+    #system "autoreconf --force --install"
     system "./configure", "--disable-dependency-tracking",
                           "--prefix=#{prefix}"
     inreplace "src/libnet_link_bpf.c", "#include <net/bpf.h>", "" # Per MacPorts

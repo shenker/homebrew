@@ -6,7 +6,7 @@ class Nlopt < Formula
   sha1 '28253b65187d9d1d4c75e96310d8ee8c9c5f3cfc'
 
   def install
-    system "./configure", "--prefix=#{prefix}"
+    system "./configure", "--prefix=#{prefix}", "--enable-shared"
     system "make"
     system "make install"
   end
