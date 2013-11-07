@@ -2,11 +2,9 @@ require 'formula'
 
 class Jetty < Formula
   homepage 'http://www.eclipse.org/jetty/'
-  url 'http://download.eclipse.org/jetty/8.1.4.v20120524/dist/jetty-distribution-8.1.4.v20120524.tar.gz'
-  version '8.1.4'
-  sha1 '7943e7d7fa0b460f034fde6d32487c9b33b9f829'
-
-  skip_clean :all
+  url 'http://eclipse.org/downloads/download.php?file=/jetty/9.0.5.v20130815/dist/jetty-distribution-9.0.5.v20130815.tar.gz&r=1'
+  version '9.0.5'
+  sha1 '9e5d237e2bf536ab9f6cdb80493a4ca27124d896'
 
   def install
     rm_rf Dir['bin/*.{cmd,bat]}']

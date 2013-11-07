@@ -2,14 +2,14 @@ require 'formula'
 
 class ClassDump < Formula
   homepage 'http://www.codethecode.com/projects/class-dump/'
-  url 'http://www.codethecode.com/download/class-dump-3.3.4.tar.bz2'
-  sha1 '1e43a3cab522565b0773aab18c40b232f231c46c'
-
   head 'https://github.com/nygard/class-dump.git'
+  url 'https://github.com/nygard/class-dump/archive/3.4.tar.gz'
+  sha1 'd8c16e94ec82979fb0e68503a217bd0c2cd5008f'
 
-  skip_clean "bin/class-dump"
+  depends_on :macos => :lion
 
   def install
-    bin.install 'class-dump'
+    system "xcodebuild", "-configuration", "Release", "SYMROOT=build", "PREFIX=#{prefix}", "ONLY_ACTIVE_ARCH=YES"
+    bin.install "build/Release/class-dump"
   end
 end

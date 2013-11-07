@@ -2,9 +2,15 @@ require 'formula'
 
 class Neo4j < Formula
   homepage 'http://neo4j.org'
-  url 'http://dist.neo4j.org/neo4j-community-1.7.2-unix.tar.gz'
-  version 'community-1.7.2-unix'
-  md5 '115afbb7cc72b089577e371ce0b1116d'
+  url 'http://dist.neo4j.org/neo4j-community-1.9.4-unix.tar.gz'
+  sha1 '35626670156b3d43038b3fe061c7883e2d32af94'
+  version '1.9.4'
+
+  devel do
+    url 'http://dist.neo4j.org/neo4j-community-2.0.0-M06-unix.tar.gz'
+    sha1 'a39ebc5476ace229e4ad5c901238a2e24a6ef0d7'
+    version '2.0.0-M06'
+  end
 
   def install
     # Remove windows files
@@ -18,6 +24,11 @@ class Neo4j < Formula
 
     # Symlink binaries
     bin.install_symlink Dir["#{libexec}/bin/neo4j{,-shell}"]
+
+    # Adjust UDC props
+    open("#{libexec}/conf/neo4j-wrapper.conf", 'a') { |f|
+      f.puts "wrapper.java.additional.4=-Dneo4j.ext.udc.source=homebrew"
+    }
   end
 
   def caveats; <<-EOS.undent
@@ -43,6 +54,9 @@ class Neo4j < Formula
 
     The manual can be found in:
         #{libexec}/doc/
+
+    You may need to add JAVA_HOME to your shell profile:
+        export JAVA_HOME="$(/usr/libexec/java_home)"
 
     EOS
   end

@@ -2,19 +2,24 @@ require 'formula'
 
 class Libpng < Formula
   homepage 'http://www.libpng.org/pub/png/libpng.html'
-  url 'http://downloads.sf.net/project/libpng/libpng15/1.5.12/libpng-1.5.12.tar.gz'
-  sha1 'c329f3a9b720d7ae14e8205fa6e332236573704b'
-
-  keg_only :when_xquartz_installed
+  url 'http://downloads.sf.net/project/libpng/libpng15/older-releases/1.5.14/libpng-1.5.14.tar.gz'
+  sha1 '67f20d69564a4a50204cb924deab029f11ad2d3c'
 
   bottle do
-    sha1 '83c6be83e86404f41982e5e1e6877924fe737bdf' => :mountainlion
-    sha1 '9a86cc5cec4cb19bd04c7c1e93595d96ebcde66f' => :lion
-    sha1 '3ba3f991b61afcaf0f369da89443738443d4effe' => :snowleopard
+    revision 1
+    sha1 '73625454f0982d11e88165fbcdcd58045a103250' => :mavericks
+    sha1 'dc3e64a3357d59c09ac517b83e048525f0a9c9ae' => :mountain_lion
+    sha1 'c3d9bca7dc5a6136b5ab19dc3635b194ae4186b1' => :lion
   end
 
+  keg_only :provided_pre_mountain_lion
+
+  option :universal
+
   def install
-    system "./configure", "--disable-dependency-tracking", "--prefix=#{prefix}"
+    ENV.universal_binary if build.universal?
+    system "./configure", "--disable-dependency-tracking",
+                          "--prefix=#{prefix}"
     system "make install"
   end
 end

@@ -2,17 +2,18 @@ require 'formula'
 
 class GdkPixbuf < Formula
   homepage 'http://gtk.org'
-  url 'http://ftp.gnome.org/pub/GNOME/sources/gdk-pixbuf/2.26/gdk-pixbuf-2.26.1.tar.xz'
-  sha256 'a60af12b58d9cc15ba4c680c6730ce5d38e8d664af1d575a379385b94b4ec7ba'
+  url 'http://ftp.gnome.org/pub/GNOME/sources/gdk-pixbuf/2.30/gdk-pixbuf-2.30.0.tar.xz'
+  sha256 '4a73600525621283a14436c5f873c1126c4feafcb07d24a746f13215e2caa658'
 
   option :universal
 
   depends_on 'pkg-config' => :build
   depends_on 'xz' => :build
   depends_on 'glib'
-  depends_on 'jasper'
+  depends_on 'jpeg'
   depends_on 'libtiff'
-  depends_on :x11
+  depends_on :libpng
+  depends_on 'gobject-introspection'
 
   # 'loaders.cache' must be writable by other packages
   skip_clean 'lib/gdk-pixbuf-2.0'
@@ -23,8 +24,7 @@ class GdkPixbuf < Formula
                           "--disable-maintainer-mode",
                           "--enable-debug=no",
                           "--prefix=#{prefix}",
-                          "--with-libjasper",
-                          "--enable-introspection=no",
+                          "--enable-introspection=yes",
                           "--disable-Bsymbolic",
                           "--without-gdiplus"
     system "make"

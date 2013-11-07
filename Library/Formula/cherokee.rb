@@ -1,23 +1,40 @@
 require 'formula'
 
 class Cherokee < Formula
-  homepage 'http://www.cherokee-project.com/'
-  url 'http://www.cherokee-project.com/download/1.2/1.2.101/cherokee-1.2.101.tar.gz'
-  md5 'ef47003355a2e368e4d9596cd070ef23'
+  homepage 'http://cherokee-project.com/'
+  url 'http://pkgs.fedoraproject.org/repo/pkgs/cherokee/cherokee-1.2.101.tar.gz/ef47003355a2e368e4d9596cd070ef23/cherokee-1.2.101.tar.gz'
+  sha1 'b27f149c7d7111207ac8c3cd8a4856c05490d136'
+
+  head do
+    url 'https://github.com/cherokee/webserver.git'
+
+    depends_on :autoconf
+    depends_on :automake
+    depends_on :libtool
+    depends_on 'wget' => :build
+  end
 
   depends_on 'gettext'
 
   def install
-    system "./configure", "--disable-dependency-tracking",
-                          "--prefix=#{prefix}",
-                          "--sysconfdir=#{etc}",
-                          "--localstatedir=#{var}/cherokee",
-                          "--with-wwwuser=#{ENV['USER']}",
-                          "--with-wwwgroup=www",
-                          "--enable-internal-pcre",
-                          # Don't install to /Library
-                          "--with-wwwroot=#{etc}/cherokee/htdocs",
-                          "--with-cgiroot=#{etc}/cherokee/cgi-bin"
+    if build.head?
+      ENV['LIBTOOL'] = 'glibtool'
+      ENV['LIBTOOLIZE'] = 'glibtoolize'
+      cmd = './autogen.sh'
+    else
+      cmd = './configure'
+    end
+
+    system cmd, "--disable-dependency-tracking",
+                "--prefix=#{prefix}",
+                "--sysconfdir=#{etc}",
+                "--localstatedir=#{var}/cherokee",
+                "--with-wwwuser=#{ENV['USER']}",
+                "--with-wwwgroup=www",
+                "--enable-internal-pcre",
+                # Don't install to /Library
+                "--with-wwwroot=#{etc}/cherokee/htdocs",
+                "--with-cgiroot=#{etc}/cherokee/cgi-bin"
     system "make install"
 
     prefix.install "org.cherokee.webserver.plist"

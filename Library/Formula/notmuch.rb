@@ -1,19 +1,49 @@
 require 'formula'
 
+class NewEnoughEmacs < Requirement
+  fatal true
+
+  def satisfied?
+    `emacs --version`.split("\n")[0] =~ /GNU Emacs (\d+)\./
+    major_version = ($1 || 0).to_i
+    major_version >= 23
+  end
+
+  def message
+    "Emacs support requires at least Emacs 23."
+  end
+end
+
 class Notmuch < Formula
   homepage 'http://notmuchmail.org'
-  url 'http://notmuchmail.org/releases/notmuch-0.13.2.tar.gz'
-  sha1 '368b2451a64b1e3c574e688100700fc941ff2ea1'
+  url 'http://notmuchmail.org/releases/notmuch-0.16.tar.gz'
+  sha1 '1919277b322d7aaffa81b80a64aedbb8a1c52a2b'
 
+  option "emacs", "Install emacs support."
+
+  depends_on NewEnoughEmacs if build.include? "emacs"
+  depends_on 'pkg-config' => :build
   depends_on 'xapian'
   depends_on 'talloc'
   depends_on 'gmime'
 
+  fails_with :clang do
+    cause "./lib/notmuch-private.h:478:8: error: visibility does not match previous declaration"
+  end
+
   def install
-    # requires a newer emacs than OS X provides, so disable the bindings
-    system "./configure", "--prefix=#{prefix}", "--without-emacs"
-    system "make install"
-    system "install_name_tool", "-change", "libnotmuch.2.dylib",
-                                "#{lib}/libnotmuch.2.dylib", "#{bin}/notmuch"
+    args = ["--prefix=#{prefix}"]
+    if build.include? "emacs"
+      args << "--with-emacs"
+    else
+      args << "--without-emacs"
+    end
+    system "./configure", *args
+
+    if ARGV.verbose?
+      system "make install V=1"
+    else
+      system "make install"
+    end
   end
 end

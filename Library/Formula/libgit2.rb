@@ -2,10 +2,10 @@ require 'formula'
 
 class Libgit2 < Formula
   homepage 'http://libgit2.github.com/'
-  url 'https://github.com/libgit2/libgit2/tarball/v0.17.0'
-  md5 '5a09dd1118d1354375407119d19e0f2c'
+  url 'https://github.com/libgit2/libgit2/archive/v0.19.0.tar.gz'
+  sha1 '72cc461d366c5ace3385470a1f209ff84d0a4bb3'
 
-  head 'https://github.com/libgit2/libgit2.git', :branch => 'master'
+  head 'https://github.com/libgit2/libgit2.git', :branch => 'development'
 
   depends_on 'cmake' => :build
 

@@ -1,63 +1,45 @@
 require 'formula'
 
-class ErlangManuals < Formula
-  url 'http://erlang.org/download/otp_doc_man_R15B01.tar.gz'
-  md5 'd87412c2a1e6005bbe29dfe642a9ca20'
-end
-
-class ErlangHtmls < Formula
-  url 'http://erlang.org/download/otp_doc_html_R15B01.tar.gz'
-  md5 '7569cae680eecd64e7e5d952be788ee5'
-end
-
-class ErlangHeadManuals < Formula
-  url 'http://erlang.org/download/otp_doc_man_R15B01.tar.gz'
-  md5 'd87412c2a1e6005bbe29dfe642a9ca20'
-end
-
-class ErlangHeadHtmls < Formula
-  url 'http://erlang.org/download/otp_doc_html_R15B01.tar.gz'
-  md5 '7569cae680eecd64e7e5d952be788ee5'
-end
-
+# Major releases of erlang should typically start out as separate formula in
+# Homebrew-versions, and only be merged to master when things like couchdb and
+# elixir are compatible.
 class Erlang < Formula
   homepage 'http://www.erlang.org'
   # Download tarball from GitHub; it is served faster than the official tarball.
-  url 'https://github.com/erlang/otp/tarball/OTP_R15B01'
-  version 'R15B01'
-  md5 'ad811bb19a085b3d60d16ce576a28b68'
+  url 'https://github.com/erlang/otp/archive/OTP_R16B02.tar.gz'
+  sha1 '81f72efe58a99ab1839eb6294935572137133717'
+
+  head 'https://github.com/erlang/otp.git', :branch => 'master'
 
   bottle do
-    # Lion bottle built on OS X 10.7.2 using Xcode 4.1 using:
-    #   brew install erlang --build-bottle --use-gcc
-    sha1 '4dfc11ed455f8f866ab4627e8055488fa1954fa4' => :lion
-    sha1 '8a4adc813ca906c8e685ff571de03653f316146c' => :snowleopard
+    revision 2
+    sha1 'f2f17d7e0fcfc8281a5a49316db73382e2ed2b77' => :mountain_lion
+    sha1 '8afbd3e03333ca368e5036f48d0bcddeb4a4c8dd' => :lion
+    sha1 'bf967eecc1475e38aa0d5636ffb68563df627c5f' => :snow_leopard
   end
 
-  head 'https://github.com/erlang/otp.git', :branch => 'dev'
+  resource 'man' do
+    url 'http://erlang.org/download/otp_doc_man_R16B02.tar.gz'
+    sha1 'c64c19d5ab176c8b7c1e05b02b4f2affbed7b0ef'
+  end
 
-  # We can't strip the beam executables or any plugins, there isn't really
-  # anything else worth stripping and it takes a really, long time to run
-  # `file` over everything in lib because there is almost 4000 files (and
-  # really erlang guys! what's with that?! Most of them should be in share/erlang!)
-  # may as well skip bin too, everything is just shell scripts
-  skip_clean ['lib', 'bin']
+  resource 'html' do
+    url 'http://erlang.org/download/otp_doc_html_R16B02.tar.gz'
+    sha1 '142e0b4becc04d3b5bf46a7fa2d48aae43cc84d0'
+  end
 
-  # remove the autoreconf if possible
+  option 'disable-hipe', "Disable building hipe; fails on various OS X systems"
+  option 'halfword', 'Enable halfword emulator (64-bit builds only)'
+  option 'time', '`brew test --time` to include a time-consuming test'
+  option 'no-docs', 'Do not install documentation'
+
   depends_on :automake
   depends_on :libtool
+  depends_on 'unixodbc' if MacOS.version >= :mavericks
+  depends_on 'fop' => :optional # enables building PDF docs
 
   fails_with :llvm do
     build 2334
-  end
-
-  def options
-    [
-      ['--disable-hipe', "Disable building hipe; fails on various OS X systems."],
-      ['--halfword', 'Enable halfword emulator (64-bit builds only)'],
-      ['--time', '"brew test --time" to include a time-consuming test.'],
-      ['--no-docs', 'Do not install documentation.']
-    ]
   end
 
   def install
@@ -68,6 +50,7 @@ class Erlang < Formula
       ENV.remove_from_cflags /-O./
       ENV.append_to_cflags '-O0'
     end
+    ENV.append "FOP", "#{HOMEBREW_PREFIX}/bin/fop" if build.with? 'fop'
 
     # Do this if building from a checkout to generate configure
     system "./otp_build autoconf" if File.exist? "otp_build"
@@ -78,10 +61,11 @@ class Erlang < Formula
             "--enable-threads",
             "--enable-dynamic-ssl-lib",
             "--enable-shared-zlib",
-            "--enable-smp-support",
-            "--with-dynamic-trace=dtrace"]
+            "--enable-smp-support"]
 
-    unless ARGV.include? '--disable-hipe'
+    args << "--with-dynamic-trace=dtrace" unless MacOS.version <= :leopard or not MacOS::CLT.installed?
+
+    unless build.include? 'disable-hipe'
       # HIPE doesn't strike me as that reliable on OS X
       # http://syntatic.wordpress.com/2008/06/12/macports-erlang-bus-error-due-to-mac-os-x-1053-update/
       # http://www.erlang.org/pipermail/erlang-patches/2008-September/000293.html
@@ -90,31 +74,35 @@ class Erlang < Formula
 
     if MacOS.prefer_64_bit?
       args << "--enable-darwin-64bit"
-      args << "--enable-halfword-emulator" if ARGV.include? '--halfword' # Does not work with HIPE yet. Added for testing only
+      args << "--enable-halfword-emulator" if build.include? 'halfword' # Does not work with HIPE yet. Added for testing only
     end
 
     system "./configure", *args
-    system "touch lib/wx/SKIP" if MacOS.snow_leopard?
-    ENV.j1 # Parallel builds not working again as of at least R15B01
     system "make"
+    ENV.j1 # Install is not thread-safe; can try to create folder twice and fail
     system "make install"
 
-    unless ARGV.include? '--no-docs'
-      manuals = ARGV.build_head? ? ErlangHeadManuals : ErlangManuals
-      manuals.new.brew { man.install Dir['man/*'] }
-
-      htmls = ARGV.build_head? ? ErlangHeadHtmls : ErlangHtmls
-      htmls.new.brew { doc.install Dir['*'] }
+    unless build.include? 'no-docs'
+      (lib/'erlang').install resource('man').files('man')
+      doc.install resource('html')
     end
+  end
+
+  def caveats; <<-EOS.undent
+    Man pages can be found in:
+      #{opt_prefix}/lib/erlang/man
+
+    Access them with `erl -man`, or add this directory to MANPATH.
+    EOS
   end
 
   def test
     `#{bin}/erl -noshell -eval 'crypto:start().' -s init stop`
 
     # This test takes some time to run, but per bug #120 should finish in
-    # "less than 20 minutes". It takes a few minutes on a Mac Pro (2009).
-    if ARGV.include? "--time"
-      `#{bin}/dialyzer --build_plt -r #{lib}/erlang/lib/kernel-2.15/ebin/`
+    # "less than 20 minutes". It takes about 20 seconds on a Mac Pro (2009).
+    if build.include?("time") && !build.head?
+      `#{bin}/dialyzer --build_plt -r #{lib}/erlang/lib/kernel-2.16.3/ebin/`
     end
   end
 end

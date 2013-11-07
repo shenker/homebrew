@@ -2,26 +2,20 @@ require 'formula'
 
 class Duplicity < Formula
   homepage 'http://www.nongnu.org/duplicity/'
-  url 'http://code.launchpad.net/duplicity/0.6-series/0.6.19/+download/duplicity-0.6.19.tar.gz'
-  md5 'c88122d0b651f84f3bfa42e55591c36b'
+  url 'http://code.launchpad.net/duplicity/0.6-series/0.6.22/+download/duplicity-0.6.22.tar.gz'
+  sha1 'afa144f444148b67d7649b32b80170d917743783'
 
+  depends_on :python
   depends_on 'librsync'
   depends_on 'gnupg'
 
+  option :universal
+
   def install
-    ENV.universal_binary
-    # Install mostly into libexec
-    system "python", "setup.py", "install",
-                     "--prefix=#{prefix}",
-                     "--install-purelib=#{libexec}",
-                     "--install-platlib=#{libexec}",
-                     "--install-scripts=#{bin}"
-
-    # Shift files around to avoid needing a PYTHONPATH
-    mv bin+'duplicity', bin+'duplicity.py'
-    mv Dir[bin+'*'], libexec
-
-    bin.install_symlink "#{libexec}/duplicity.py" => "duplicity"
-    bin.install_symlink "#{libexec}/rdiffdir"
+    python do
+      ENV.universal_binary if build.universal?
+      # Install mostly into libexec
+      system python, "setup.py", "install", "--prefix=#{prefix}"
+    end
   end
 end

@@ -2,19 +2,39 @@ require 'formula'
 
 class Bind < Formula
   homepage 'http://www.isc.org/software/bind/'
-  url 'ftp://ftp.isc.org/isc/bind9/9.8.1-P1/bind-9.8.1-P1.tar.gz'
-  version '9.8.1-p1'
-  sha256 '867fdd52d3436c6ab6d357108d7f9eaaf03f1422652e6e61c742816ff7f87929'
+  url 'http://ftp.isc.org/isc/bind9/9.9.4/bind-9.9.4.tar.gz'
+  sha1 'd7be390e6c2546f37a7280e1975e1cd134565f62'
 
-  depends_on "openssl" if MacOS.leopard?
+  option 'with-brewed-openssl', 'Build with Homebrew OpenSSL instead of the system version'
+
+  depends_on "openssl" if MacOS.version <= :leopard or build.with?('brewed-openssl')
 
   def install
-      ENV['STD_CDEFINES']='-DDIG_SIGCHASE=1'
-      system "./configure", "--prefix=#{prefix}",
-                            "--enable-threads",
-                            "--enable-ipv6",
-                            "--with-openssl"
-      system "make"
-      system "make install"
+    ENV.libxml2
+    # libxml2 appends one inc dir to CPPFLAGS but bind ignores CPPFLAGS
+    ENV.append 'CFLAGS', ENV.cppflags
+
+    ENV['STD_CDEFINES'] = '-DDIG_SIGCHASE=1'
+
+    args = [
+      "--prefix=#{prefix}",
+      "--enable-threads",
+      "--enable-ipv6",
+    ]
+
+    if build.with? 'brewed-openssl'
+      args << "--with-ssl-dir=#{Formula.factory('openssl').opt_prefix}"
+    elsif MacOS.version > :leopard
+      # For Xcode-only systems we help a bit to find openssl.
+      # If CLT.installed?, it evaluates to "/usr", which works.
+      args << "--with-openssl=#{MacOS.sdk_path}/usr"
+    end
+
+    system "./configure", *args
+
+    # From the bind9 README: "Do not use a parallel 'make'."
+    ENV.deparallelize
+    system "make"
+    system "make install"
   end
 end

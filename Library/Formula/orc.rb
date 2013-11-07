@@ -2,8 +2,8 @@ require 'formula'
 
 class Orc < Formula
   homepage 'http://code.entropywave.com/projects/orc/'
-  url 'http://code.entropywave.com/download/orc/orc-0.4.16.tar.gz'
-  md5 'e482932e544c847761449b106ecbc483'
+  url 'http://code.entropywave.com/download/orc/orc-0.4.17.tar.gz'
+  sha1 '5cb7b3225a23bc4a5771a62e9c94a90d21609632'
 
   def install
     # Fix compiling on 32 bit systems. See:

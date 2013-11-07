@@ -2,11 +2,16 @@ require 'formula'
 
 class Gradle < Formula
   homepage 'http://www.gradle.org/'
-  url 'http://services.gradle.org/distributions/gradle-1.1-bin.zip'
-  sha1 '938b2a4e40fd2fd701c5138edbcbab54b9b7f85e'
+  url 'http://services.gradle.org/distributions/gradle-1.8-bin.zip'
+  sha1 'f14299582a1ab6c1293a43697ecda4b2673e34b1'
+
+  devel do
+    url 'http://services.gradle.org/distributions/gradle-1.9-rc-2-bin.zip'
+    sha1 '16fb8a8609893572b95a283b88ef5383df4f07b3'
+    version '1.9-rc2'
+  end
 
   def install
-    rm_f Dir["bin/*.bat"]
     libexec.install %w[bin lib]
     bin.install_symlink libexec+'bin/gradle'
   end

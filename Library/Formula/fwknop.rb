@@ -2,8 +2,11 @@ require 'formula'
 
 class Fwknop < Formula
   homepage 'http://www.cipherdyne.org/fwknop/'
-  url 'http://www.cipherdyne.org/fwknop/download/fwknop-2.0.1.tar.gz'
-  sha1 '71b2de97c80daf4f7db3aa0ca204731c8f11f3e2'
+  url 'http://www.cipherdyne.org/fwknop/download/fwknop-2.5.1.tar.bz2'
+  sha1 '65bed25e9d7f4a7ccc3f15cab35b95a6f7b21873'
+
+  # needed for gpg support
+  depends_on 'gpgme' => :optional
 
   def install
     system "./configure", "--disable-dependency-tracking",

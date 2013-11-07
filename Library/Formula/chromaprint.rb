@@ -2,19 +2,17 @@ require 'formula'
 
 class Chromaprint < Formula
   homepage 'http://acoustid.org/chromaprint'
-  url 'https://github.com/downloads/lalinsky/chromaprint/chromaprint-0.6.tar.gz'
-  md5 '6b5a4f2685395e68d8abc40d1c2a8785'
+  url 'https://bitbucket.org/acoustid/chromaprint/downloads/chromaprint-1.0.tar.gz'
+  sha1 '919e012af588a7e6fea862b29a30e3a5da67526a'
 
-  def options
-    [['--without-examples', "Don't build examples (including fpcalc)"]]
-  end
+  option 'without-examples', "Don't build examples (including fpcalc)"
 
   depends_on 'cmake' => :build
-  depends_on 'ffmpeg' unless ARGV.include? '--without-examples'
+  depends_on 'ffmpeg' unless build.include? 'without-examples'
 
   def install
     args = std_cmake_args
-    args << '-DBUILD_EXAMPLES=ON' unless ARGV.include? '--without-examples'
+    args << '-DBUILD_EXAMPLES=ON' unless build.include? 'without-examples'
     system "cmake", ".", *args
     system "make install"
   end

@@ -3,7 +3,7 @@ require 'formula'
 class Hping < Formula
   homepage 'http://www.hping.org/'
   url 'http://www.hping.org/hping3-20051105.tar.gz'
-  md5 'ca4ea4e34bcc2162aedf25df8b2d1747'
+  sha1 'e13d27e14e7f90c2148a9b00a480781732fd351e'
   version '3.20051105'
 
   def patches
@@ -18,6 +18,10 @@ class Hping < Formula
   end
 
   def install
+    # Conflict with secure strcpy function. Applying suggested fix from macports.
+    # http://trac.macports.org/ticket/40763#comment:2
+    ENV.append 'CFLAGS', '-D_FORTIFY_SOURCE=0'
+
     # Compile fails with tcl support; TCL on OS X is 32-bit only
     system "./configure", "--no-tcl"
 

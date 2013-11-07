@@ -2,16 +2,15 @@ require 'formula'
 
 class PkgConfig < Formula
   homepage 'http://pkgconfig.freedesktop.org'
-  url 'http://pkgconfig.freedesktop.org/releases/pkg-config-0.27.tar.gz'
-  mirror 'http://fossies.org/unix/privat/pkg-config-0.27.tar.gz'
-  sha256 '79a6b43ee6633c9e6cc03eb1706370bb7a8450659845b782411f969eaba656a4'
-
-  depends_on 'gettext'
+  url 'http://pkgconfig.freedesktop.org/releases/pkg-config-0.28.tar.gz'
+  mirror 'http://fossies.org/unix/privat/pkg-config-0.28.tar.gz'
+  sha256 '6b6eb31c6ec4421174578652c7e141fdaae2dabad1021f420d8713206ac1f845'
 
   bottle do
-    sha1 '52e1a98740cc834f4b29ee31923812914461f815' => :mountainlion
-    sha1 'ebeb434ee288ac7c96cfa09eee98434fe810edff' => :lion
-    sha1 'b72a6f5078ee917a28c1e6c9948db23701f4dd18' => :snowleopard
+    revision 1
+    sha1 '7e7fd6ed2cb6047254a8f39ae3a6e35e7a74e12b' => :mavericks
+    sha1 'ae227f7888d7d268f1742526cf1959b3260b22b6' => :mountain_lion
+    sha1 '69e86c0e2424a921176b9da66b54be01d80bf624' => :lion
   end
 
   def install
@@ -21,18 +20,20 @@ class PkgConfig < Formula
         /usr/local/lib/pkgconfig
         /usr/lib/pkgconfig
       ].uniq
-    system "./configure", "--disable-debug",
-                          "--prefix=#{prefix}",
-                          "--with-pc-path=#{paths*':'}",
-                          "--with-internal-glib"
+
+    args = %W[
+        --disable-debug
+        --prefix=#{prefix}
+        --disable-host-tool
+        --with-internal-glib
+        --with-pc-path=#{paths*':'}
+      ]
+    args << "CC=#{ENV.cc} #{ENV.cflags}" unless MacOS::CLT.installed?
+
+    system "./configure", *args
+
     system "make"
     system "make check"
     system "make install"
-
-    # Fix some bullshit.
-    # pkg-config tries to install glib's m4 macros, which will conflict with
-    # an actual glib install. See:
-    # https://bugs.freedesktop.org/show_bug.cgi?id=52031
-    rm Dir["#{share}/aclocal/g*.m4"]
   end
 end

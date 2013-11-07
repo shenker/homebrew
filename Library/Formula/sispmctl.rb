@@ -2,8 +2,8 @@
 
 class Sispmctl < Formula
   homepage 'http://sispmctl.sourceforge.net/'
-  url 'http://sourceforge.net/projects/sispmctl/files/sispmctl/sispmctl-3.1/sispmctl-3.1.tar.gz'
-  md5 '24693cae30d77c957f34cfb2c8159661'
+  url 'http://downloads.sourceforge.net/project/sispmctl/sispmctl/sispmctl-3.1/sispmctl-3.1.tar.gz'
+  sha1 'f89d2820ca48794b80df81309910299dbc1278e1'
 
   depends_on 'libusb'
 

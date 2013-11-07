@@ -2,12 +2,12 @@ require 'formula'
 
 class Pixman < Formula
   homepage 'http://cairographics.org/'
-  url 'http://cairographics.org/releases/pixman-0.26.2.tar.gz'
-  sha256 'c9ab554b5160679d958bfa1753cb9e6edd1e53c4745c963a1394eea4f0b13ce2'
+  url 'http://cairographics.org/releases/pixman-0.30.2.tar.gz'
+  sha256 'bd988920ccd742310ddf5b363c7b278f11d69a3405a09d542162c84b46bff6e9'
 
   depends_on 'pkg-config' => :build
 
-  keg_only :when_xquartz_installed
+  keg_only :provided_pre_mountain_lion
 
   option :universal
 
