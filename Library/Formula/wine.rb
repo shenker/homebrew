@@ -7,20 +7,28 @@ class Wine < Formula
   homepage 'http://winehq.org/'
 
   stable do
-    url 'http://downloads.sourceforge.net/project/wine/Source/wine-1.6.tar.bz2'
-    sha256 'e1f130efbdcbfa211ca56ee03357ccd17a31443889b4feebdcb88248520b42ae'
-    depends_on 'little-cms'
+    url 'http://downloads.sourceforge.net/project/wine/Source/wine-1.6.2.tar.bz2'
+    sha256 'f0ab9eede5a0ccacbf6e50682649f9377b9199e49cf55641f1787cf72405acbe'
+
+    resource 'gecko' do
+      url 'http://downloads.sourceforge.net/wine/wine_gecko-2.21-x86.msi', :using => :nounzip
+      version '2.21'
+      sha1 'a514fc4d53783a586c7880a676c415695fe934a3'
+    end
+
+    resource 'mono' do
+      url 'http://downloads.sourceforge.net/wine/wine-mono-0.0.8.msi', :using => :nounzip
+      sha256 '3dfc23bbc29015e4e538dab8b83cb825d3248a0e5cf3b3318503ee7331115402'
+    end
   end
 
   devel do
-    url 'http://downloads.sourceforge.net/project/wine/Source/wine-1.7.5.tar.bz2'
-    sha256 '355c2980c457f7d714132fcf7008fcb9ad185295bdd9f0681e9123d839952823'
-    depends_on 'little-cms2'
+    url 'http://downloads.sourceforge.net/project/wine/Source/wine-1.7.11.tar.bz2'
+    sha256 'c07d2771ed96c45d428bb11d164c5e4bbe48d6857a0a4cba2e0b73c5f1044f93'
   end
 
   head do
     url 'git://source.winehq.org/git/wine.git'
-    depends_on 'little-cms2'
   end
 
   env :std
@@ -35,6 +43,7 @@ class Wine < Formula
   depends_on 'freetype' if build.without? 'x11'
   depends_on 'jpeg'
   depends_on 'libgphoto2'
+  depends_on 'little-cms2'
   depends_on 'libicns'
   depends_on 'libtiff'
   depends_on 'sane-backends'
@@ -47,8 +56,8 @@ class Wine < Formula
   end
 
   resource 'mono' do
-    url 'http://downloads.sourceforge.net/wine/wine-mono-0.0.8.msi', :using => :nounzip
-    sha1 'dd349e72249ce5ff981be0e9dae33ac4a46a9f60'
+    url 'http://downloads.sourceforge.net/wine/wine-mono-4.5.2.msi', :using => :nounzip
+    sha256 'd9124edb41ba4418af10eba519dafb25ab4338c567d25ce0eb4ce1e1b4d7eaad'
   end
 
   fails_with :llvm do
@@ -61,28 +70,22 @@ class Wine < Formula
     cause 'error: invalid operand for instruction lretw'
   end
 
-  def patches
-    p = []
-    if build.stable?
-      # http://bugs.winehq.org/show_bug.cgi?id=34188
-      p << 'http://bugs.winehq.org/attachment.cgi?id=45507'
-      # http://bugs.winehq.org/show_bug.cgi?id=34162
-      p << 'http://bugs.winehq.org/attachment.cgi?id=45562' if MacOS.version >= :mavericks
-    end
-    if build.devel?
-      # http://bugs.winehq.org/show_bug.cgi?id=34166
-      p << 'http://bugs.winehq.org/attachment.cgi?id=46394'
-    end
-    p
-  end
+  # There may be flicker in fullscreen mode, but there is no current patch:
+  # # http://bugs.winehq.org/show_bug.cgi?id=34166
 
-  # the following libraries are currently not specified as dependencies, or not built as 32-bit:
+  # These libraries are not specified as dependencies, or not built as 32-bit:
   # configure: libv4l, gstreamer-0.10, libcapi20, libgsm
 
   # Wine loads many libraries lazily using dlopen calls, so it needs these paths
   # to be searched by dyld.
   # Including /usr/lib because wine, as of 1.3.15, tries to dlopen
   # libncurses.5.4.dylib, and fails to find it without the fallback path.
+
+  def library_path
+    paths = %W[#{HOMEBREW_PREFIX}/lib /usr/lib]
+    paths.unshift(MacOS::X11.lib) unless build.without? 'x11'
+    paths.join(':')
+  end
 
   def wine_wrapper; <<-EOS.undent
     #!/bin/sh
@@ -107,6 +110,7 @@ class Wine < Formula
     end
 
     # Workarounds for XCode not including pkg-config files
+    # FIXME we include pkg-config files for libxml2 and libxslt. Is this really necessary?
     ENV.libxml2
     ENV.append "LDFLAGS", "-lxslt"
 
@@ -170,14 +174,5 @@ class Wine < Formula
       EOS
     end
     return s
-  end
-
-  private
-
-  def library_path
-    paths = ["#{HOMEBREW_PREFIX}/lib", '/usr/lib']
-    paths.unshift(MacOS::X11.lib) unless build.without? 'x11'
-
-    paths.join(':')
   end
 end

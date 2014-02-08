@@ -2,13 +2,13 @@ require 'formula'
 
 class Gradle < Formula
   homepage 'http://www.gradle.org/'
-  url 'http://services.gradle.org/distributions/gradle-1.8-bin.zip'
-  sha1 'f14299582a1ab6c1293a43697ecda4b2673e34b1'
+  url 'http://services.gradle.org/distributions/gradle-1.10-bin.zip'
+  sha1 'f911beeff25ebbb7b4af3092dd7f0c93019aef17'
 
   devel do
-    url 'http://services.gradle.org/distributions/gradle-1.9-rc-2-bin.zip'
-    sha1 '16fb8a8609893572b95a283b88ef5383df4f07b3'
-    version '1.9-rc2'
+    url 'http://services.gradle.org/distributions/gradle-1.11-rc-1-bin.zip'
+    sha1 'd5c1e564a788faa7fd109a17e0412a86a7b37502'
+    version '1.11-rc-1'
   end
 
   def install

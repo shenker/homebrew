@@ -2,8 +2,8 @@ require 'formula'
 
 class TypesafeActivator < Formula
   homepage 'http://typesafe.com/activator'
-  url 'http://downloads.typesafe.com/typesafe-activator/1.0.7/typesafe-activator-1.0.7.zip'
-  sha1 '3740649056e605962e8d73ae0a50b07c276921c2'
+  url 'http://downloads.typesafe.com/typesafe-activator/1.0.11/typesafe-activator-1.0.11.zip'
+  sha1 '34b22dcc9dd3352ef042f63491774527e0e2ca9d'
 
   def install
     # remove Windows .bat files

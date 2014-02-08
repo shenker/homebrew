@@ -43,7 +43,7 @@ class Version
   NULL_TOKEN = NullToken.new
 
   class StringToken < Token
-    PATTERN = /[a-z]+[0-9]+/i
+    PATTERN = /[a-z]+[0-9]*/i
 
     def initialize(value)
       @value = value.to_s
@@ -189,6 +189,11 @@ class Version
     max = [tokens.length, other.tokens.length].max
     pad_to(max) <=> other.pad_to(max)
   end
+  alias_method :eql?, :==
+
+  def hash
+    @version.hash
+  end
 
   def to_s
     @version.dup
@@ -313,7 +318,7 @@ class Version
     return m.captures.first unless m.nil?
 
     # e.g. http://mirrors.jenkins-ci.org/war/1.486/jenkins.war
-    m = /\/(\d\.\d+)\//.match(spec_s)
+    m = /\/(\d\.\d+(\.\d)?)\//.match(spec_s)
     return m.captures.first unless m.nil?
 
     # e.g. http://www.ijg.org/files/jpegsrc.v8d.tar.gz

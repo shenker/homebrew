@@ -2,14 +2,15 @@ require 'formula'
 
 class Sqlite < Formula
   homepage 'http://sqlite.org/'
-  url 'http://www.sqlite.org/2013/sqlite-autoconf-3080100.tar.gz'
-  version '3.8.1'
-  sha1 '42464b07df2d6f8aa28f73ce4cc6d48b47be810e'
+  url 'http://sqlite.org/2014/sqlite-autoconf-3080300.tar.gz'
+  version '3.8.3'
+  sha1 'c2a21d71d0c7dc3af71cf90f04dfd22ecfb280c2'
 
   bottle do
-    sha1 '6b76c6c72549ac9e399523e50f2c65f2e36446df' => :mavericks
-    sha1 'e2791c264bae126ed9f5d4e2f0ebd39cff021e06' => :mountain_lion
-    sha1 '3df9bddc26a4f807f6d814beeed228bde6887f84' => :lion
+    cellar :any
+    sha1 "c3ba888ce038fd3863cf9fdfab6c3b1e96feb8ee" => :mavericks
+    sha1 "46e68b32ce2a4d92947bb3507730ffe626e7c189" => :mountain_lion
+    sha1 "4fddb1b5b136edab695094425b413291b2c53efb" => :lion
   end
 
   keg_only :provided_by_osx, "OS X provides an older sqlite3."
@@ -29,9 +30,9 @@ class Sqlite < Formula
   end
 
   resource 'docs' do
-    url 'http://www.sqlite.org/2013/sqlite-doc-3080100.zip'
-    version '3.8.1'
-    sha1 'd7cb698f32318fbf5dce9f10c9cd7b84c3d70105'
+    url 'http://sqlite.org/2014/sqlite-doc-3080300.zip'
+    version '3.8.3'
+    sha1 '199c977b948d3e6b9b0b165cb661275e0856d38e'
   end
 
   def install
@@ -79,5 +80,20 @@ class Sqlite < Formula
          0.707106781186548
       EOS
     end
+  end
+
+  test do
+    path = testpath/"school.sql"
+    path.write <<-EOS.undent
+      create table students (name text, age integer);
+      insert into students (name, age) values ('Bob', 14);
+      insert into students (name, age) values ('Sue', 12);
+      insert into students (name, age) values ('Tim', 13);
+      select name from students order by age asc;
+    EOS
+
+    names = `#{bin}/sqlite3 < #{path}`.strip.split("\n")
+    assert_equal %w[Sue Tim Bob], names
+    assert_equal 0, $?.exitstatus
   end
 end

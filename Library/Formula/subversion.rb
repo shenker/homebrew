@@ -2,15 +2,14 @@ require 'formula'
 
 class Subversion < Formula
   homepage 'http://subversion.apache.org/'
-  url 'http://www.apache.org/dyn/closer.cgi?path=subversion/subversion-1.8.4.tar.bz2'
-  mirror 'http://archive.apache.org/dist/subversion/subversion-1.8.4.tar.bz2'
-  sha1 '6e7ac5b56ec22995c763a668c658577f96f2c090'
+  url 'http://www.apache.org/dyn/closer.cgi?path=subversion/subversion-1.8.5.tar.bz2'
+  mirror 'http://archive.apache.org/dist/subversion/subversion-1.8.5.tar.bz2'
+  sha1 'd21de7daf37d9dd1cb0f777e999a529b96f83082'
 
   bottle do
-    revision 1
-    sha1 '03a9e38626bf1f9c243b4052a7955985c4962b9f' => :mavericks
-    sha1 'c13bbc716a1ee788812ecefd52f36778b22978b9' => :mountain_lion
-    sha1 '0d956908378049edfdfcef732af1769b7c52b4c0' => :lion
+    sha1 '1022095a741a6fb2c43b28003cecd6d8f220fe1e' => :mavericks
+    sha1 '82f6a8eb37d89badd9ed77ee7620f84304278db7' => :mountain_lion
+    sha1 '00340eabc7849c05ec0611ae8aea79db3848578e' => :lion
   end
 
   option :universal
@@ -20,8 +19,8 @@ class Subversion < Formula
   option 'ruby', 'Build Ruby bindings'
 
   resource 'serf' do
-    url 'http://serf.googlecode.com/files/serf-1.3.2.tar.bz2'
-    sha1 '90478cd60d4349c07326cb9c5b720438cf9a1b5d'
+    url 'http://serf.googlecode.com/files/serf-1.3.3.tar.bz2'
+    sha1 'b25c44a8651805f20f66dcaa76db08442ec4fa0e'
   end
 
   depends_on 'pkg-config' => :build
@@ -35,7 +34,7 @@ class Subversion < Formula
   depends_on :libtool
 
   # Bindings require swig
-  depends_on 'swig' if build.include? 'perl' or build.include? 'python' or build.include? 'ruby'
+  depends_on 'swig' if build.include? 'perl' or build.with? 'python' or build.include? 'ruby'
 
   # For Serf
   depends_on 'scons' => :build
@@ -44,8 +43,10 @@ class Subversion < Formula
   # If building bindings, allow non-system interpreters
   env :userpaths if build.include? 'perl' or build.include? 'ruby'
 
-  # One patch to prevent '-arch ppc' from being pulled in from Perl's $Config{ccflags},
-  # and another one to put the svn-tools directory into libexec instead of bin
+  # 1. Prevent '-arch ppc' from being pulled in from Perl's $Config{ccflags}
+  # 2. Backport r1535610 to help fix #23993.
+  #    See http://subversion.tigris.org/issues/show_bug.cgi?id=4465
+  # 3. Fix #23993 by stripping flags swig can't handle from SWIG_CPPFLAGS
   def patches
     { :p0 => DATA }
   end
@@ -96,7 +97,7 @@ class Subversion < Formula
 
     if build.include? 'java'
       # Java support doesn't build correctly in parallel:
-      # https://github.com/mxcl/homebrew/issues/20415
+      # https://github.com/Homebrew/homebrew/issues/20415
       ENV.deparallelize
 
       unless build.universal?
@@ -138,6 +139,9 @@ class Subversion < Formula
     # variable to prevent failures due to incompatible CFLAGS
     ENV['ac_cv_python_compile'] = ENV.cc
 
+    inreplace 'Makefile.in',
+              'toolsdir = @bindir@/svn-tools',
+              'toolsdir = @libexecdir@/svn-tools'
     # Suggestion by upstream. http://svn.haxx.se/users/archive-2013-09/0188.shtml
     system "./autogen.sh"
     system "./configure", *args
@@ -148,7 +152,7 @@ class Subversion < Formula
     system "make tools"
     system "make install-tools"
 
-    python do
+    if build.with? 'python'
       system "make swig-py"
       system "make install-swig-py"
     end
@@ -204,8 +208,6 @@ class Subversion < Formula
         #{opt_prefix}/libexec
     EOS
 
-    s += python.standard_caveats if python
-
     if build.include? 'perl'
       s += <<-EOS.undent
 
@@ -236,6 +238,9 @@ class Subversion < Formula
 end
 
 __END__
+
+Patch 1
+
 --- subversion/bindings/swig/perl/native/Makefile.PL.in~ 2013-06-20 18:58:55.000000000 +0200
 +++ subversion/bindings/swig/perl/native/Makefile.PL.in	2013-06-20 19:00:49.000000000 +0200
 @@ -69,10 +69,15 @@
@@ -256,14 +261,98 @@ __END__
                   " -I$swig_srcdir/perl/libsvn_swig_perl",
                   " -I$svnlib_srcdir/include",
 
---- Makefile.in~ 2013-07-25 16:55:27.000000000 +0200
-+++ Makefile.in 2013-07-25 17:02:02.000000000 +0200
-@@ -85,7 +85,7 @@
- swig_pydir_extra = @libdir@/svn-python/svn
- swig_pldir = @libdir@/svn-perl
- swig_rbdir = $(SWIG_RB_SITE_ARCH_DIR)/svn/ext
--toolsdir = @bindir@/svn-tools
-+toolsdir = @libexecdir@/svn-tools
+Patch 2
 
- javahl_javadir = @libdir@/svn-javahl
- javahl_javahdir = @libdir@/svn-javahl/include
+$  svn log -v -r1535610 --diff http://svn.apache.org/repos/asf/subversion/trunk
+------------------------------------------------------------------------
+r1535610 | breser | 2013-10-24 20:22:50 -0600 (Thu, 24 Oct 2013) | 20 lines
+Changed paths:
+   M /subversion/trunk/Makefile.in
+   M /subversion/trunk/build.conf
+   M /subversion/trunk/configure.ac
+
+Filter out -no-cpp-precomp from flags passed to SWIG.
+
+This is necessary since APR for whatever reason leaks the fact that it uses
+-no-cpp-precomp on OS X into apr-1-config.  Unfortunately, a lot of versions
+of APR have this in the wild so we just have to deal with it.  If you use clang
+directly you don't see this because we already filter it out of CPPFLAGS.
+
+* Makefile.in
+  (SWIG_CPPFLAGS): New variable, deliberately pulling in EXTRA_CPPFLAGS and
+    not EXTRA_SIWG_CPPFLAGS because it would be harmful to split those
+    (e.g. users wanting to enable a feature that adds an API).
+
+* build.conf
+  (swig-python-opts, swig-perl-opts, swig-ruby-opts): Use SWIG_CPPFLAGS
+    instead of CPPFLAGS.
+
+* configure.acc
+  (SWIG_CPPFLAGS): Add the variable and copy it from the normal CPPFLAGS
+    while filtering out the -no-cpp-precomp.
+
+
+Index: Makefile.in
+===================================================================
+--- Makefile.in	(revision 1535609)
++++ Makefile.in	(revision 1535610)
+@@ -181,6 +181,7 @@
+ CPPFLAGS = @CPPFLAGS@ $(EXTRA_CPPFLAGS)
+ LDFLAGS = @LDFLAGS@ $(EXTRA_LDFLAGS)
+ SWIG_LDFLAGS = @SWIG_LDFLAGS@ $(EXTRA_SWIG_LDFLAGS)
++SWIG_CPPFLAGS = @SWIG_CPPFLAGS@ $(EXTRA_CPPFLAGS)
+
+ COMPILE = $(CC) $(CMODEFLAGS) $(CPPFLAGS) $(CMAINTAINERFLAGS) $(CFLAGS) $(INCLUDES)
+ COMPILE_NOWARN = $(CC) $(CMODEFLAGS) $(CPPFLAGS) $(CNOWARNFLAGS) $(CFLAGS) $(INCLUDES)
+Index: build.conf
+===================================================================
+--- build.conf	(revision 1535609)
++++ build.conf	(revision 1535610)
+@@ -88,9 +88,9 @@
+
+ bdb-test-scripts =
+
+-swig-python-opts = $(CPPFLAGS) -python -classic
+-swig-perl-opts = $(CPPFLAGS) -perl -nopm -noproxy
+-swig-ruby-opts = $(CPPFLAGS) -ruby
++swig-python-opts = $(SWIG_CPPFLAGS) -python -classic
++swig-perl-opts = $(SWIG_CPPFLAGS) -perl -nopm -noproxy
++swig-ruby-opts = $(SWIG_CPPFLAGS) -ruby
+ swig-languages = python perl ruby
+ swig-dirs =
+         subversion/bindings/swig/python
+Index: configure.ac
+===================================================================
+--- configure.ac	(revision 1535609)
++++ configure.ac	(revision 1535610)
+@@ -1490,6 +1490,11 @@
+   SVN_STRIP_FLAG(CPPFLAGS, [-no-cpp-precomp ])
+ fi
+
++# Need to strip '-no-cpp-precomp' from CPPFLAGS for SWIG as well.
++SWIG_CPPFLAGS="$CPPFLAGS"
++SVN_STRIP_FLAG(SWIG_CPPFLAGS, [-no-cpp-precomp ])
++AC_SUBST([SWIG_CPPFLAGS])
++
+ dnl Since this is used only on Unix-y systems, define the path separator as '/'
+ AC_DEFINE_UNQUOTED(SVN_PATH_LOCAL_SEPARATOR, '/',
+         [Defined to be the path separator used on your local filesystem])
+
+------------------------------------------------------------------------
+
+Patch 3
+
+diff -u configure.ac configure.ac
+--- configure.ac	(working copy)
++++ configure.ac	(working copy)
+@@ -1446,6 +1446,10 @@
+ # Need to strip '-no-cpp-precomp' from CPPFLAGS for SWIG as well.
+ SWIG_CPPFLAGS="$CPPFLAGS"
+ SVN_STRIP_FLAG(SWIG_CPPFLAGS, [-no-cpp-precomp ])
++# Swig don't understand "-F" and "-isystem" flags added by Homebrew,
++# so filter them out.
++SVN_STRIP_FLAG(SWIG_CPPFLAGS, [-F\/[[^ ]]* ])
++SVN_STRIP_FLAG(SWIG_CPPFLAGS, [-isystem\/[[^ ]]* ])
+ AC_SUBST([SWIG_CPPFLAGS])
+
+ dnl Since this is used only on Unix-y systems, define the path separator as '/'

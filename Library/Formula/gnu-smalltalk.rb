@@ -17,11 +17,11 @@ class GnuSmalltalk < Formula
   option 'tcltk', 'Build the Tcl/Tk module that requires X11'
 
   # Need newer versions on Snow Leopard
+  depends_on 'autoconf' => :build
   depends_on 'automake' => :build
   depends_on 'libtool' => :build
 
   depends_on 'pkg-config' => :build
-  depends_on 'xz'         => :build
   depends_on 'gawk'       => :build
   depends_on 'readline'   => :build
   depends_on 'libffi'     => :recommended
@@ -59,5 +59,14 @@ class GnuSmalltalk < Formula
     system "make"
     system 'make', '-j1', 'check' if build.include? 'tests'
     system "make install"
+  end
+
+  test do
+    path = testpath/"test.gst"
+    path.write "0 to: 9 do: [ :n | n display ]\n"
+
+    output = `#{bin}/gst #{path}`.strip
+    assert_equal "0123456789", output
+    assert_equal 0, $?.exitstatus
   end
 end

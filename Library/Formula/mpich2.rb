@@ -11,13 +11,19 @@ class Mpich2 < Formula
   head do
     url 'git://git.mpich.org/mpich.git'
 
+    depends_on 'autoconf' => :build
     depends_on 'automake' => :build
     depends_on 'libtool'  => :build
   end
 
+  devel do
+    url 'http://www.mpich.org/static/downloads/3.1rc3/mpich-3.1rc3.tar.gz'
+    sha1 '5dc3aff479df6b88328f9800652eae3b0ec587e7'
+  end
 
   option 'disable-fortran', "Do not attempt to build Fortran bindings"
-  option 'enable-shared', "Build shared libraries"
+  option 'enable-shared', "Build shared libraries (default for versions > 3.0.4)"
+  option 'disable-shared', "Do not build shared libraries (default for versions <= 3.0.4)"
 
   depends_on :fortran unless build.include? 'disable-fortran'
 
@@ -53,9 +59,11 @@ class Mpich2 < Formula
       args << "--disable-f77" << "--disable-fc"
     end
 
-    # MPICH configure defaults to "--disable-shared"
+    # MPICH configure up to version 3.0.4 defaults to "--disable-shared"
     if build.include? 'enable-shared'
       args << "--enable-shared"
+    elsif build.include? 'disable-shared'
+      args << "--disable-shared"
     end
 
     system "./configure", *args
