@@ -2,8 +2,8 @@ require 'formula'
 
 class JpegTurbo < Formula
   homepage 'http://www.libjpeg-turbo.org/'
-  url 'http://downloads.sourceforge.net/project/libjpeg-turbo/1.3.0/libjpeg-turbo-1.3.0.tar.gz'
-  sha1 '1792c964b35604cebd3a8846f1ca6de5976e9c28'
+  url 'https://downloads.sourceforge.net/project/libjpeg-turbo/1.3.1/libjpeg-turbo-1.3.1.tar.gz'
+  sha1 '5fa19252e5ca992cfa40446a0210ceff55fbe468'
 
   depends_on 'nasm' => :build if MacOS.prefer_64_bit?
 
@@ -14,7 +14,7 @@ class JpegTurbo < Formula
     if MacOS.prefer_64_bit?
       args << "--host=x86_64-apple-darwin"
       # Auto-detect our 64-bit nasm
-      args << "NASM=#{Formula.factory('nasm').bin}/nasm"
+      args << "NASM=#{Formula["nasm"].bin}/nasm"
     end
 
     system "./configure", *args
